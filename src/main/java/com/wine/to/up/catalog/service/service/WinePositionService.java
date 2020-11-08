@@ -3,7 +3,7 @@ package com.wine.to.up.catalog.service.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.primitives.Bytes;
-import com.wine.to.up.catalog.service.api.domain.UpdatePriceEvent;
+import com.wine.to.up.catalog.service.api.message.UpdatePriceMessageSentEventOuterClass;
 import com.wine.to.up.catalog.service.domain.dto.WinePositionDTO;
 import com.wine.to.up.catalog.service.domain.entities.WinePosition;
 import com.wine.to.up.catalog.service.domain.request.SettingsRequest;
@@ -137,18 +137,22 @@ public class WinePositionService implements BaseCrudService<WinePositionDTO> {
         WinePosition winePosition = new WinePosition();
 
         if (oldWinePositionDTO.getActual_price() != winePositionDTO.getActual_price()) {
-            UpdatePriceEvent updatePriceEvent = new UpdatePriceEvent();
-
-            updatePriceEvent.setId(id);
             String wineID = winePositionDTO.getWine_id();
-            updatePriceEvent.setName(wineRepository.findWineByWineID(wineID).getWineName());
-            updatePriceEvent.setPrice(winePositionDTO.getActual_price());
+
+            UpdatePriceMessageSentEventOuterClass.UpdatePriceMessageSentEvent updatePriceMessageSentEvent =
+                    UpdatePriceMessageSentEventOuterClass.UpdatePriceMessageSentEvent
+                            .newBuilder()
+                            .setId(id)
+                            .setName(wineRepository.findWineByWineID(wineID).getWineName())
+                            .setPrice(winePositionDTO.getActual_price())
+                            .build();
+
 
             KafkaMessageSentEvent event;
             ObjectMapper objectMapper = new ObjectMapper();
             try {
                 event = KafkaMessageSentEvent.newBuilder()
-                        .setMessage(objectMapper.writeValueAsString(updatePriceEvent))
+                        .setMessage(objectMapper.writeValueAsString(updatePriceMessageSentEvent))
                         .build();
 
                 kafkaSendMessageService.sendMessage(event);

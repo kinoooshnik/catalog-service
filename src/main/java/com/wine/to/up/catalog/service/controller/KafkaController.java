@@ -5,7 +5,6 @@ import com.wine.to.up.commonlib.annotations.InjectEventLogger;
 import com.wine.to.up.commonlib.logging.CommonNotableEvents;
 import com.wine.to.up.commonlib.logging.EventLogger;
 import com.wine.to.up.commonlib.messaging.KafkaMessageSender;
-import com.wine.to.up.demo.service.api.dto.DemoServiceMessage;
 import com.wine.to.up.demo.service.api.message.KafkaMessageHeaderOuterClass;
 import com.wine.to.up.demo.service.api.message.KafkaMessageSentEventOuterClass.KafkaMessageSentEvent;
 import com.wine.to.up.catalog.service.logging.CatalogServiceNotableEvents;
@@ -58,50 +57,50 @@ public class KafkaController {
     @PostMapping(value = "/send")
     public void sendMessage(@RequestBody String message) {
         eventLogger.info(CatalogServiceNotableEvents.I_CONTROLLER_RECEIVED_MESSAGE, message);
-        sendMessageWithHeaders(new DemoServiceMessage(Collections.emptyMap(), message));
+        //sendMessageWithHeaders(new DemoServiceMessage(Collections.emptyMap(), message));
     }
 
-    /**
-     * See {@link #sendMessage(String)}
-     * Sends message with headers
-     */
-    @PostMapping(value = "/send/headers")
-    public void sendMessageWithHeaders(@RequestBody DemoServiceMessage message) {
-        AtomicInteger counter = new AtomicInteger(0);
-
-        KafkaMessageSentEvent event = KafkaMessageSentEvent.newBuilder()
-                .addAllHeaders(message.getHeaders().entrySet().stream()
-                        .map(entry -> KafkaMessageHeaderOuterClass.KafkaMessageHeader.newBuilder()
-                                .setKey(entry.getKey())
-                                .setValue(ByteString.copyFrom(entry.getValue()))
-                                .build())
-                        .collect(toList()))
-                .setMessage(message.getMessage())
-                .build();
-
-        int sent = Stream.iterate(1, v -> v + 1)
-                .limit(3)
-                .map(n -> executorService.submit(() -> {
-                    int numOfMessages = 10;
-                    for (int j = 0; j < numOfMessages; j++) {
-                        kafkaSendMessageService.sendMessage(event);
-                        counter.incrementAndGet();
-                        eventLogger.info(CatalogServiceNotableEvents.I_KAFKA_SEND_MESSAGE_SUCCESS, message);
-                    }
-                    return numOfMessages;
-                }))
-                .map(f -> {
-                    try {
-                        return f.get();
-                    } catch (InterruptedException | ExecutionException e) {
-                        log.error("Error while sending in Kafka ", e);
-                        eventLogger.warn(CommonNotableEvents.W_KAFKA_SEND_MESSAGE_FAILED, e);
-                        return 0;
-                    }
-                })
-                .mapToInt(Integer::intValue)
-                .sum();
-
-        log.info("Sent: " + sent);
-    }
+//    /**
+//     * See {@link #sendMessage(String)}
+//     * Sends message with headers
+//     */
+//    @PostMapping(value = "/send/headers")
+//    public void sendMessageWithHeaders(@RequestBody DemoServiceMessage message) {
+//        AtomicInteger counter = new AtomicInteger(0);
+//
+//        KafkaMessageSentEvent event = KafkaMessageSentEvent.newBuilder()
+//                .addAllHeaders(message.getHeaders().entrySet().stream()
+//                        .map(entry -> KafkaMessageHeaderOuterClass.KafkaMessageHeader.newBuilder()
+//                                .setKey(entry.getKey())
+//                                .setValue(ByteString.copyFrom(entry.getValue()))
+//                                .build())
+//                        .collect(toList()))
+//                .setMessage(message.getMessage())
+//                .build();
+//
+//        int sent = Stream.iterate(1, v -> v + 1)
+//                .limit(3)
+//                .map(n -> executorService.submit(() -> {
+//                    int numOfMessages = 10;
+//                    for (int j = 0; j < numOfMessages; j++) {
+//                        kafkaSendMessageService.sendMessage(event);
+//                        counter.incrementAndGet();
+//                        eventLogger.info(CatalogServiceNotableEvents.I_KAFKA_SEND_MESSAGE_SUCCESS, message);
+//                    }
+//                    return numOfMessages;
+//                }))
+//                .map(f -> {
+//                    try {
+//                        return f.get();
+//                    } catch (InterruptedException | ExecutionException e) {
+//                        log.error("Error while sending in Kafka ", e);
+//                        eventLogger.warn(CommonNotableEvents.W_KAFKA_SEND_MESSAGE_FAILED, e);
+//                        return 0;
+//                    }
+//                })
+//                .mapToInt(Integer::intValue)
+//                .sum();
+//
+//        log.info("Sent: " + sent);
+//    }
 }
