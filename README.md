@@ -10,4 +10,4 @@
 - выполните `docker images`, найдите там образ сервиса, возьмите его тег и замените `latest` в profiles/catalog-service.yml на него.
 - выполните `docker-compose -f profiles/minimal-Infrastructure.yml -f profiles/catalog-service.yml up`
  
- При изменении версии в сервиса в pom файле нужно изменить версию приложения в demo-service.yml
+ При изменении версии в сервиса в pom файле нужно изменить версию приложения в demo-service.yml  

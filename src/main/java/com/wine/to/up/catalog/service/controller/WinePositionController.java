@@ -2,6 +2,7 @@ package com.wine.to.up.catalog.service.controller;
 
 import com.wine.to.up.catalog.service.domain.entities.WinePosition;
 import com.wine.to.up.catalog.service.domain.request.SettingsRequest;
+import com.wine.to.up.catalog.service.domain.request.SettingsTrueRequest;
 import com.wine.to.up.catalog.service.domain.request.WinePositionRequest;
 import com.wine.to.up.catalog.service.domain.response.WinePositionResponse;
 import com.wine.to.up.catalog.service.mapper.controller2service.WinePositionControllerToWinePositionService;

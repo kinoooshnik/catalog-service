@@ -3,7 +3,7 @@ package com.wine.to.up.catalog.service.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.primitives.Bytes;
-import com.wine.to.up.catalog.service.api.domain.UpdatePriceEvent;
+//import com.wine.to.up.catalog.service.api.domain.UpdatePriceEvent;
 import com.wine.to.up.catalog.service.domain.dto.WinePositionDTO;
 import com.wine.to.up.catalog.service.domain.entities.WinePosition;
 import com.wine.to.up.catalog.service.domain.request.SettingsRequest;
@@ -14,7 +14,6 @@ import com.wine.to.up.catalog.service.repository.ShopRepository;
 import com.wine.to.up.catalog.service.repository.WinePositionRepository;
 import com.wine.to.up.catalog.service.repository.WineRepository;
 import com.wine.to.up.commonlib.messaging.KafkaMessageSender;
-import com.wine.to.up.demo.service.api.message.KafkaMessageSentEventOuterClass.KafkaMessageSentEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -38,7 +37,6 @@ public class WinePositionService implements BaseCrudService<WinePositionDTO> {
     private final WinePositionRepository winePositionRepository;
     private final WineRepository wineRepository;
     private final ShopRepository shopRepository;
-    private final KafkaMessageSender<KafkaMessageSentEvent> kafkaSendMessageService;
 
     private static final Map<String, String> matrixArguments = new HashMap<String, String>() {
         {
@@ -83,11 +81,24 @@ public class WinePositionService implements BaseCrudService<WinePositionDTO> {
             }
         }
         WinePositionSpecificationBuilder wpSpecBuilder = new WinePositionSpecificationBuilder();
-        Pattern pattern = Pattern.compile("(\\w+?)(:|<|>)([\\s\\S]+?);", Pattern.UNICODE_CHARACTER_CLASS);
+        Pattern pattern = Pattern.compile("([\\s\\S]+?)(:|<|>)([\\s\\S]+?);", Pattern.UNICODE_CHARACTER_CLASS);
         Matcher matcher = pattern.matcher(settingsRequest.getSearchParameters() + ";");
 
         while (matcher.find()) {
-            wpSpecBuilder.with(matrixArguments.get(matcher.group(1)), matcher.group(2), matcher.group(3));
+            String keyGroup = matcher.group(1);
+            String firstChar = keyGroup.substring(0, 1);
+
+            String key;
+            if (firstChar.equals("~")) {
+                key = "~" + matrixArguments.get(keyGroup.substring(1));
+            } else if (firstChar.equals("*")) {
+                key = "*" + matrixArguments.get(keyGroup.substring(1));
+            } else {
+                key = matrixArguments.get(keyGroup);
+            }
+
+
+            wpSpecBuilder.with(key, matcher.group(2), matcher.group(3));
         }
 
         //unreachable
@@ -169,7 +180,7 @@ public class WinePositionService implements BaseCrudService<WinePositionDTO> {
         WinePositionDTO oldWinePositionDTO = read(id);
 
         WinePosition winePosition = new WinePosition();
-
+        /*
         if (oldWinePositionDTO.getActual_price() != winePositionDTO.getActual_price()) {
             UpdatePriceEvent updatePriceEvent = new UpdatePriceEvent();
 
@@ -190,7 +201,7 @@ public class WinePositionService implements BaseCrudService<WinePositionDTO> {
                 e.printStackTrace();
             }
         }
-
+        */
         winePosition.setWpId(id);
         winePosition.setWpWine(wineRepository.findWineByWineID(winePositionDTO.getWine_id()));
         winePosition.setShop(shopRepository.findByShopID(winePositionDTO.getShop_id()));
